@@ -16,7 +16,5 @@ curl -o .config https://downloads.openwrt.org/snapshots/targets/mediatek/filogic
         --overwrite-config \
         --config mediatek_filogic_DEVICE_bananapi_bpi-r4-poe
 
-make defconfig
-
 #build
 make -j $(nproc) defconfig download clean world
