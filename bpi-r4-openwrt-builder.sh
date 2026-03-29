@@ -2,45 +2,24 @@
 set -euo pipefail
 
 rm -rf openwrt
-rm -rf mtk-openwrt-feeds
 
-git clone --branch openwrt-25.12 https://github.com/openwrt/openwrt.git openwrt
-cd openwrt; git checkout 34ae6ba2d861e710e3c130c95cdb7eb4a1286121; cd -;		#procd: update to Git HEAD (2026-03-11)
+# checkout openwrt snapshot + cherry pick wifi hotfix
+git clone https://github.com/openwrt/openwrt.git openwrt
+cd openwrt;
+git remote add wifiHotfix https://github.com/danpawlik/openwrt.git
+git fetch wifiHotfix
+git cherry-pick 4235ed7d6d0d66da384bd487e3ed899c3b315efc
 
-git clone --branch master https://git01.mediatek.com/openwrt/feeds/mtk-openwrt-feeds
-cd mtk-openwrt-feeds; git checkout 6ce60af4713fffc97222136bc94a5fcf858ef409; cd -;	#[openwrt-25][common][bsp][Use git-src instead of git-src-full to reduce feed size]
+#download external toolchain
+curl -s -L https://downloads.openwrt.org/snapshots/targets/mediatek/filogic/openwrt-toolchain-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst | tar --zstd -xvf - -C .
 
-\cp -r my_files/feed_revision mtk-openwrt-feeds/autobuild/unified/
+./scripts/feeds update -a && ./scripts/feeds install -a
 
-\cp -r my_files/999-sfp-10-additional-quirks.patch mtk-openwrt-feeds/25.12/files/target/linux/mediatek/patches-6.12
+wget https://downloads.openwrt.org/snapshots/targets/mediatek/filogic/config.buildinfo -O .config
+./scripts/ext-toolchain.sh \
+        --toolchain openwrt-toolchain-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/toolchain-aarch64_cortex-a53_gcc-14.3.0_musl/ \
+        --overwrite-config \
+        --config mediatek_filogic_DEVICE_bananapi_bpi-r4-poe
 
-\cp -r my_files/9999-image-bpi-r4-sdcard.patch mtk-openwrt-feeds/25.12/patches-base
-
-### tx_power check Gilly_1970's patch - for defective BE14 boards with defective eeprom flash
-#\cp -r my_files/0140-wifi-mt76-mt7996-use-mt76_get_txpower_cur.patch mtk-openwrt-feeds/autobuild/unified/filogic/mac80211/25.12/files/package/kernel/mt76/patches
-
-cd openwrt
-bash ../mtk-openwrt-feeds/autobuild/unified/autobuild.sh filogic-mac80211-mt798x_rfb-wifi7_nic prepare
-
-\cp -r ../my_files/sms-tool/ feeds/packages/utils/sms-tool
-\cp -r ../my_files/modemdata-main/ feeds/packages/utils/modemdata 
-\cp -r ../my_files/luci-app-modemdata-main/luci-app-modemdata/ feeds/luci/applications
-\cp -r ../my_files/luci-app-lite-watchdog/ feeds/luci/applications
-\cp -r ../my_files/luci-app-sms-tool-js-main/luci-app-sms-tool-js/ feeds/luci/applications
-
-./scripts/feeds update -a
-./scripts/feeds install -a
-
-\cp -r ../my_files/qmi.sh package/network/utils/uqmi/files/lib/netifd/proto/
-chmod -R 755 package/network/utils/uqmi/files/lib/netifd/proto
-chmod -R 755 feeds/luci/applications/luci-app-modemdata/root
-chmod -R 755 feeds/luci/applications/luci-app-sms-tool-js/root
-chmod -R 755 feeds/packages/utils/modemdata/files/usr/share
-
-#\cp -r ../my_files/my_final_defconfig .config
-\cp -r ../configs/config.hnat.la .config
-make defconfig
-
-bash ../mtk-openwrt-feeds/autobuild/unified/autobuild.sh filogic-mac80211-mt798x_rfb-wifi7_nic build
-
-
+#build
+make -j $(nproc) defconfig download clean world
