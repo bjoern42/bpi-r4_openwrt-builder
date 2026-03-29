@@ -73,7 +73,7 @@ jobs:
             const { owner, repo } = context.repo;
             const artifacts = await github.rest.actions.listArtifactsForRepo({ owner, repo, per_page: 100 });
             for (const artifact of artifacts.data.artifacts) {
-              if (artifact.name === 'openwrt-bpi-r4-6.12-images') {
+              if (artifact.name === 'openwrt-bpi-r4-images') {
                 await github.rest.actions.deleteArtifact({
                   owner,
                   repo,
@@ -98,7 +98,7 @@ jobs:
         if: success()
         run: |
           cd openwrt/bin/targets/mediatek/filogic
-          zip -r openwrt-bpi-r4-6.12-images.zip .
+          zip -r openwrt-bpi-r4-images.zip .
 
       - name: Set short SHA and tag
         id: vars
@@ -111,7 +111,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: openwrt-bpi-r4-6.12-images
+          name: openwrt-bpi-r4-images
           path: openwrt/bin/targets/mediatek/filogic/
 
       - name: Create or update GitHub Release (latest)
@@ -125,18 +125,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            openwrt/bin/targets/mediatek/filogic/openwrt-bpi-r4-6.12-images.zip
-            openwrt/bin/targets/mediatek/filogic/config.buildinfo
-            openwrt/bin/targets/mediatek/filogic/feeds.buildinfo
-            openwrt/bin/targets/mediatek/filogic/mt7988-ram-ddr4-bl2.bin
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-emmc-bl31-uboot.fip
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-emmc-gpt.bin
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-emmc-preloader.bin
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-initramfs-kernel.bin
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-sdcard.img.gz
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-snand-bl31-uboot.fip
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-snand-preloader.bin
-            openwrt/bin/targets/mediatek/filogic/openwrt-mediatek-filogic-bananapi_bpi-r4-squashfs-sysupgrade.itb
+            openwrt/bin/targets/mediatek/filogic/openwrt-bpi-r4-images.zip
             openwrt/bin/targets/mediatek/filogic/sha256sums
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
