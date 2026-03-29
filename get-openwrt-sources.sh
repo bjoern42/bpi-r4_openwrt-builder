@@ -2,8 +2,8 @@
 rm -rf openwrt
 
 # checkout openwrt snapshot + cherry pick wifi hotfix
-git config user.email "bjoern.eschle@disroot.org"
-git config user.name "bjoern.eschle"
+git config --global user.email "bjoern.eschle@disroot.org"
+git config --global user.name "bjoern.eschle"
 
 
 git clone https://github.com/openwrt/openwrt.git openwrt
