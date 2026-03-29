@@ -65,35 +65,6 @@ jobs:
         run: |
           ls -R openwrt/bin/targets || true
 
-      - name: Delete old artifacts with same name (latest)
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const artifacts = await github.rest.actions.listArtifactsForRepo({ owner, repo, per_page: 100 });
-            for (const artifact of artifacts.data.artifacts) {
-              if (artifact.name === 'openwrt-bpi-r4-images') {
-                await github.rest.actions.deleteArtifact({
-                  owner,
-                  repo,
-                  artifact_id: artifact.id,
-                });
-              }
-            }
-
-      - name: Cleanup build output
-        if: success()
-        run: |
-          cd openwrt/bin/targets/mediatek/filogic
-
-          rm -rf kernel-debug.tar.zst
-          rm -rf packages
-
-          for f in mt7988-ram-*.bin; do
-            [ "$f" = "mt7988-ram-ddr4-bl2.bin" ] || rm -f "$f"
-          done
-
       - name: Create ZIP with all images
         if: success()
         run: |
@@ -127,41 +98,5 @@ jobs:
           files: |
             openwrt/bin/targets/mediatek/filogic/openwrt-bpi-r4-images.zip
             openwrt/bin/targets/mediatek/filogic/sha256sums
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete older releases (keep latest)
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-
-            const releases = await github.rest.repos.listReleases({
-              owner,
-              repo,
-              per_page: 100
-            });
-
-            // všechny releasy s tagem bpi-r4-latest
-            const autoReleases = releases.data.filter(
-              rel => rel.tag_name === 'bpi-r4-latest'
-            );
-
-            // seøadit (nejnovìjší první)
-            autoReleases.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-            // nechat nejnovìjší, ostatní smazat
-            const toDelete = autoReleases.slice(1);
-
-            for (const rel of toDelete) {
-              await github.rest.repos.deleteRelease({
-                owner,
-                repo,
-                release_id: rel.id
-              }).catch(e => {
-                console.log(`Failed to delete release ${rel.id}: ${e.message}`);
-              });
-            }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
