@@ -1,4 +1,5 @@
 # OpenWrt build for Banana Pi BPI-R4 with WIFI txPower hotfix
+Some Banana Pi BPI-R4 BE14 WiFi modules are shipped with zeroed tx_power fields in EEPROM (2G/5G/6G). This leads to low transmit power on affected bands. This pipeline builds the latest openwrt with applied patch from danpawlik.
 
 ## Build
 Steps:
