@@ -14,6 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get openwrt sources
+        run: |
+          chmod +x ./get-openwrt-sources.sh
+          ./get-openwrt-sources.sh
+
       - name: Free disk space on runner
         run: |
           sudo rm -rf \
